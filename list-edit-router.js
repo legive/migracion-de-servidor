@@ -7,71 +7,107 @@ const taskList=require('./data')
 
 router.use(express.json());
 
-router.post('/', (req, res) => {
+ //Crea un middleware a nivel de aplicación para gestionar que solo llegen solicitudes por métodos http validos dentro del servidor, de lo contrario debe devolver el error.
+
+ const validateMethodHttp = (req, res, next) => {
+  const metodo = req.method;
+  
+  if (!(metodo==='POST')&&!(metodo==='PUT')&&!(metodo==='DELETE')&&!(metodo==='GET')) {
+    return res.status(405).json({ error: 'Método HTTP no permitido.' });
+  }
+   
+  next();
+};
+router.use(validateMethodHttp);
+
+const validateErrors=(req, res, next)=>{
+const  newTask =req.body
+const method=req.method
+ 
+
+  if((method==="POST" || method==="PUT") && !req.body) 
+{
+  return res.status(400).send("No envío datos");
+  }
+  if(method==="POST")
+  {
+    
+    if(!newTask || Object.keys(req.body).length === 0)
+    {
+       return res.status(400).json({ error: 'Empty Task' });
+    }
+   
+    const keys = Object.keys(newTask);
+  
+    if (keys.length !== 4) {
+      return res.status(400).json({ error: 'ingrese los 4 atributos de la tarea' });
+    }
+  
+    
+  }
+
+  if(metodo==="PUT")
+  {
+    if(!newTask || Object.keys(req.body).length === 0)
+    {
+       
+      return res.status(400).json({ error: 'Tarea vacia' });
+    } 
+    else{ next()}
+    
+  }
+
+  next()
+  }
+
+ 
+  
+
+
+router.post('/', validateErrors, (req, res) => {
     const newTask = req.body;
     console.log(newTask)
     
-    if (!newTask) {
-      return res.status(400).json({ error: 'Error al ingresar tarea' });
-    }
+   
         taskList.push(newTask)
         res.status(201).json({ mensaje: 'Tarea agregada con éxito.' });
   });
 
-  router.delete('/:id', (req, res) => {
+  const validateTask=(req, res, next)=>{
+    const idpar =  parseInt(req.params.id)
+    console.log(idpar)
+    const index=taskList.findIndex((task)=>task.id===idpar)
+    if (index === -1) {
+      return res.status(404).json({ error: 'Tarea no encontrada.' });
+    }
+next();
+  }
+
+
+  router.delete('/:id', validateTask, (req, res) => {
     const idpar =   parseInt(req.params.id)
     console.log(idpar)
     const index=taskList.findIndex((task)=>task.id===idpar)
-
-        console.log(index)
-    if (index === -1) {
-        return res.status(404).json({ error: 'Tarea no encontrada.' });
-      }
-      else
-      {
+    
         taskList.splice(index, 1)
         res.status(201).json({ mensaje: 'Tarea eliminada con éxito.' });
         res.json(taskList);
         console.log(taskList)
-      }
+      
        
   });
 
-  router.put('/:id', (req, res) => {
 
+
+  router.put('/:id',validateErrors, validateTask, (req, res) => {
     const idpar =   parseInt(req.params.id)
     console.log(idpar)
     const index=taskList.findIndex((task)=>task.id===idpar)
-
-        console.log(index)
-    if (index === -1) {
-        return res.status(404).json({ error: 'Tarea no encontrada.' });
-      }
-      else
-      {
-        const { name, description, isCompleted } = req.body;
-
-        if (name!="" && name!=null)
-        {
-          taskList[index].name=name;
-        }
-        if (description!="" && description!=null)
-        {
-          taskList[index].description=description;
-        }
-       
-       
-        if (isCompleted !== undefined) {
-            taskList[index].isCompleted = isCompleted;
-
-          }
+        const tarea = req.body;
+        taskList[index]={...taskList[index],...tarea}
         res.status(201).json({ mensaje: 'Tarea actualizada con éxito.' });
         res.json(taskList[index]);
-        console.log(taskList)
-      }
-    
-
-    
+        console.log(taskList)  
   });
 
 
