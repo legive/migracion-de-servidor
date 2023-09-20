@@ -25,8 +25,42 @@ const validarRuta = (req, res, next) => {
   next();
 };
 router.use(validarRuta);
+//Crea una ruta protegida que haga la validación de un token JWT recibido dentro de un header de autorización que esté en la petición.
 
+const administradores=['legive', 'admin2'];
+//Crea una ruta protegida que haga la validación de un token JWT recibido dentro de un header de autorización que esté en la petición.
+const JWTValidation = (req, res, next) => {
+  console.log("entro")
+  const headerToken = req.headers.authorization;
+  const user=req.headers.user;
+console.log(user)
 
+  try {
+    
+    const decoded = jwt.verify(headerToken, process.env.SECRET_KEY);
+    console.log(process.env.SECRET_KEY)
+    console.log("---->", decoded);
+    req.user = decoded;
+    if (administradores.includes(user))
+
+    {next();
+    }
+    else{
+      return res.status(400).send("Acceso denegado para su rol de usuario")
+    }
+    
+  } catch (error) {
+    console.log("entro")
+    return res.status(400).send("Token incorrecto");
+
+  }
+};
+
+//Implementa la creación de un JWT en la ruta /login para una serie de usuarios predefinidos en un array dentro de tu servidor
+
+router.get("/rutaAdmin", JWTValidation, (req, res) => {
+  res.send({ mensaje: "Bienvenido admin", user: req.user });
+});
 router.get("/", (req, res) => {
   res.json(taskList);
   res.status(404).send("Not found");
@@ -46,24 +80,9 @@ router.get("/pendientes", (req, res) => {
   res.json(tareasIncompletas);
 });
 
-//Crea una ruta protegida que haga la validación de un token JWT recibido dentro de un header de autorización que esté en la petición.
-const JWTValidation = (req, res, next) => {
-  const headerToken = req.headers.authorization;
-console.log("HeaderToken", headerToken)
-  try {
-    const decoded = jwt.verify(headerToken, process.env.SECRET_KEY);
-    console.log("---->", decoded);
-    req.user = decoded;
-    next();
-  } catch (error) {
-    return res.status(400).send("Token incorrecto");
-  }
-};
-//Implementa la creación de un JWT en la ruta /login para una serie de usuarios predefinidos en un array dentro de tu servidor
 
-router.get("/rutaAdmin", JWTValidation, (req, res) => {
-  res.send({ mensaje: "Bienvenido admin", user: req.user });
-});
+
+
 
 module.exports = router;
 
