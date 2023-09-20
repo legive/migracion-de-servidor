@@ -2,7 +2,21 @@ const express = require("express");
 const router = express.Router();
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
-const users = require("./data2");
+const users = [
+  {
+    email: "leylagisela@gmail.com",
+    user: "legive",
+    password: "1234",
+    rol: "admin",
+  },
+  {
+    email: "interra_2012@yahoo.com",
+    user: "interra",
+    password: "12345",
+    rol: "user",
+  },
+];
+
 // Mi lista de tareas
 const taskList = require("./data");
 
@@ -11,13 +25,13 @@ router.use(express.json());
 //Crea un middleware a nivel de aplicación para gestionar que solo llegen solicitudes por métodos http validos dentro del servidor, de lo contrario debe devolver el error.
 
 const validateMethodHttp = (req, res, next) => {
-  const metodo = req.method;
+  const method = req.method;
 
   if (
-    !(metodo === "POST") &&
-    !(metodo === "PUT") &&
-    !(metodo === "DELETE") &&
-    !(metodo === "GET")
+    !(method === "POST") &&
+    !(method === "PUT") &&
+    !(method === "DELETE") &&
+    !(method === "GET")
   ) {
     return res.status(405).json({ error: "Método HTTP no permitido." });
   }
@@ -47,7 +61,7 @@ const validateErrors = (req, res, next) => {
     }
   }
 
-  if (metodo === "PUT") {
+  if (method === "PUT") {
     if (!newTask || Object.keys(req.body).length === 0) {
       return res.status(400).json({ error: "Tarea vacia" });
     } else {
@@ -103,29 +117,28 @@ router.post("/login", (req, res) => {
   const userName = req.body.user;
   const userPass = req.body.password;
 
-  const user = users.find((user) => user.user === userName);
-  console.log(user);
-  console.log(userPass);
-  console.log(user.password);
+  const user = users.find((user) => user.user === userName); 
+  
   if (user) {
     if (userPass === user.password) {
       const payload = {
         email: user.email,
         rol: user.rol,
-        name: user.name,
+        user: user.user,
         password: user.password,
       };
-
+      
       const token = jwt.sign(payload, process.env.SECRET_KEY );
 
       res.status(200).send({ mensaje: "Bienvenido a la plataforma", token });
+  
     } else {
       return res.status(401).send({ error: "Invalid user name or password" });
     }
   } else {
     return res.status(401).send({ error: "Invalid user name or password" });
   }
-  next();
+ 
 });
 
 

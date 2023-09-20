@@ -1,11 +1,10 @@
 const express = require("express");
 const app = express();
-const port = 3001;
+const port = 2000;
 require("dotenv").config();
 
 const listEditRouter = require("./list-edit-router");
 const listViewRouter = require("./list-view-router");
-
 
 
 app.use(express.json());
@@ -19,5 +18,5 @@ app.use("/tareas", listEditRouter);
 
 app.listen(port, () => {
   console.log(`Servidor iniciado en el puerto: ${port}`);
-  
+
 });
